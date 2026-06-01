@@ -83,6 +83,8 @@
 #define HAL_DFSDM_MODULE_ENABLED
 #define HAL_LPTIM_MODULE_ENABLED
 #define HAL_MMC_MODULE_ENABLED
+#define HAL_I2C_MODULE_ENABLED
+#define HAL_DMA_MODULE_ENABLED
 
 /* ########################## HSE/HSI Values adaptation ##################### */
 /**
