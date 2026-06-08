@@ -16,12 +16,12 @@ TaskHandle_t xPhysicsTaskHandle;
 uint8_t aRxBuffer[ACCEL_DATA_SIZE];
 
 // Function Prototypes
-extern "C" {
-    void SystemClock_Config(void);
-}
 static void I2C3_Init(void);
 static void DMA_Init(void);
 void vPhysicsTask(void *pvParameters);
+extern "C" {
+    void SystemClock_Config(void);
+}
 
 
 int main(void) {
@@ -97,7 +97,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c) {
         __HAL_RCC_GPIOC_CLK_ENABLE();
         __HAL_RCC_I2C3_CLK_ENABLE();
 
-        // Configure SCL (PA8) and SDA (PC9)
+        /* Configure I2C3 SCL as alternate function */
         GPIO_InitStruct.Pin = GPIO_PIN_8;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -105,7 +105,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c) {
         GPIO_InitStruct.Alternate = GPIO_AF4_I2C3;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+        /* Configure I2C3 SDA as alternate function */
         GPIO_InitStruct.Pin = GPIO_PIN_9;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+        GPIO_InitStruct.Alternate = GPIO_AF4_I2C3; // Explicit assignment matching lab style
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
         // DMA Interrupt priority configuration
@@ -130,37 +135,6 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
 // Ensure the actual hardware IRQ is exposed to C
 void DMA1_Stream2_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_i2c3_rx);
-}
-
-void SystemClock_Config(void) {
-  __PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 16;
-
-  RCC_OscInitStruct.PLL.PLLN = 336;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2; /* 168 MHz for STM32F429xx */
-  RCC_OscInitStruct.PLL.PLLQ = 7;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  HAL_RCC_OscConfig(&RCC_OscInitStruct);
-
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK
-      | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-  HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
-
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 }
 
 } // End extern "C"
@@ -188,6 +162,9 @@ void vPhysicsTask(void *pvParameters) {
 
                     // Re-trigger DMA for the next continuous read cycle
                     HAL_I2C_Mem_Read_DMA(&hi2c3, BMA180_I2C_ADDRESS, BMA180_REG_ACCEL_X_LSB, I2C_MEMADD_SIZE_8BIT, aRxBuffer, ACCEL_DATA_SIZE);
+
+                    // Wait 100ms before allowing the next DMA read to process
+                    vTaskDelay(pdMS_TO_TICKS(500)); // remove later maybe
                 }
     }
 }
