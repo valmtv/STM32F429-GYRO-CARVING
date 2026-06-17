@@ -1,0 +1,2 @@
+source /Users/omatviiv/eclipse-workspace/STM32F429-GYRO-CARVING/build/gdbinit/symbols
+source /Users/omatviiv/eclipse-workspace/STM32F429-GYRO-CARVING/build/gdbinit/connect

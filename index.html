@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STM32 Telemetry Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #fff; text-align: center; margin-top: 50px; }
+        .val { font-size: 4em; color: #00ff00; font-weight: bold; text-shadow: 0 0 10px #00ff00; }
+        h1 { color: #ccc; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <h1>STM32F429 + BMA180 TELEMETRY</h1>
+    <h2>Pitch: <span id="pitch" class="val">0.00</span>&deg;</h2>
+    <h2>Roll: <span id="roll" class="val">0.00</span>&deg;</h2>
+    
+    <script>
+        // Fetch data from the Python server every 100ms
+        setInterval(async () => {
+            try {
+                const res = await fetch('/data.json');
+                const data = await res.json();
+                document.getElementById('pitch').innerText = data.pitch.toFixed(2);
+                document.getElementById('roll').innerText = data.roll.toFixed(2);
+            } catch (e) { console.error("Waiting for data..."); }
+        }, 100);
+    </script>
+</body>
+</html>
