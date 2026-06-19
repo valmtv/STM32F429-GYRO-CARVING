@@ -30,7 +30,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define configPRIO_BITS 4
+// #define configPRIO_BITS 4  // Defined correctly on line 103
 extern uint32_t SystemCoreClock;
 
 #ifdef __cplusplus
